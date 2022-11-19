@@ -12,7 +12,7 @@ const apiDataSlice = createSlice({
   name: "apiData",
   initialState: {
     Datas: [],
-    loading: false,
+    loading: true,
   },
   extraReducers: {
     [GetApi.fulfilled]: (state, action) => {

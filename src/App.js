@@ -1,81 +1,172 @@
-import { useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import Map from "react-map-gl";
-import * as Configs from "./configs";
-import * as Components from "./components";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Component, Fragment } from "react";
+import Map from "react-map-gl";
+import { connect } from "react-redux";
+import { Route, Routes } from "react-router-dom";
+import * as Components from "./components";
+import * as Configs from "./configs";
 
-function App() {
-  const { Datas } = useSelector((state) => state.dataApi);
+class App extends Component {
+  constructor(props) {
+    super(props);
 
-  const [popupInfo, setPopupInfo] = useState(null);
-  const [styleId, setStyleId] = useState("light");
+    this.state = {
+      popupInfo: null,
+      styleId: "light",
+    };
+    this.handlePopupInfo = this.handlePopupInfo.bind(this);
+    this.handleStyleId = this.handleStyleId.bind(this);
+    this.componentDidMount = this.componentDidMount.bind(this);
+  }
 
-  const token = useSelector((state) => state.token.value);
-  const dispatch = useDispatch();
+  componentDidMount() {
+    this.props.configAPI(Configs.GetApi());
+  }
 
-  const FilterColor = ({ color }) =>
-    Datas?.map((data, index) => (
+  handlePopupInfo(value) {
+    this.setState((prev) => ({ ...prev, popupInfo: value }));
+  }
+
+  handleStyleId(value) {
+    this.setState((prev) => ({ ...prev, styleId: value }));
+  }
+
+  render() {
+    const { Datas, token, isLoading } = this.props;
+    const styles = {
+      light: "mapbox://styles/mapbox/outdoors-v9",
+      dark: "mapbox://styles/vinoarystio/cl6ttky7b000y14my3f7khdlk",
+    };
+
+    return (
       <>
-        {color ? (
-          <>
-            {data.properties.Status === color ? (
-              <Components.Layer
-                setPopupInfo={setPopupInfo}
-                data={data}
-                key={index}
-              />
-            ) : null}
-          </>
+        {isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "100vh",
+            }}
+          >
+            <h1>Loading . . .</h1>
+          </div>
         ) : (
-          <>
-            {Datas?.map((data, index) => (
-              <Components.Layer
-                setPopupInfo={setPopupInfo}
-                data={data}
-                key={index}
+          <Map
+            style={{ width: "100%", height: "100vh" }}
+            mapStyle={styles[this.state.styleId]}
+            initialViewState={{
+              longitude: 107.608238,
+              latitude: -6.914864,
+              zoom: 12,
+            }}
+            mapboxAccessToken={token}
+          >
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <FilterColor
+                    Datas={Datas}
+                    setPopupInfo={this.handlePopupInfo}
+                  />
+                }
               />
-            ))}
-          </>
+              <Route
+                path="status-merah"
+                element={
+                  <FilterColor
+                    Datas={Datas}
+                    color="Merah"
+                    setPopupInfo={this.handlePopupInfo}
+                  />
+                }
+              />
+              <Route
+                path="status-hijau"
+                element={
+                  <FilterColor
+                    Datas={Datas}
+                    color="Hijau"
+                    setPopupInfo={this.handlePopupInfo}
+                  />
+                }
+              />
+              <Route
+                path="status-kuning"
+                element={
+                  <FilterColor
+                    Datas={Datas}
+                    color="Kuning"
+                    setPopupInfo={this.handlePopupInfo}
+                  />
+                }
+              />
+            </Routes>
+
+            {this.state.popupInfo && (
+              <Components.PopUp
+                popupInfo={this.state.popupInfo}
+                setPopupInfo={this.handlePopupInfo}
+              />
+            )}
+            <Components.Menu setStyleId={this.handleStyleId} />
+          </Map>
         )}
       </>
-    ));
-
-  useEffect(() => {
-    dispatch(Configs.GetApi());
-  }, [dispatch]);
-
-  const styles = {
-    light: "mapbox://styles/mapbox/outdoors-v9",
-    dark: "mapbox://styles/vinoarystio/cl6ttky7b000y14my3f7khdlk",
-  };
-
-  console.log(FilterColor);
-  return (
-    <Map
-      style={{ width: "100%", height: "100vh" }}
-      mapStyle={styles[styleId]}
-      initialViewState={{
-        longitude: 107.608238,
-        latitude: -6.914864,
-        zoom: 12,
-      }}
-      mapboxAccessToken={token}
-    >
-      <Routes>
-        <Route path="/" element={<FilterColor />} />
-        <Route path="status-merah" element={<FilterColor color="Merah" />} />
-        <Route path="status-hijau" element={<FilterColor color="Hijau" />} />
-        <Route path="status-kuning" element={<FilterColor color="Kuning" />} />
-      </Routes>
-
-      {popupInfo && (
-        <Components.PopUp popupInfo={popupInfo} setPopupInfo={setPopupInfo} />
-      )}
-      <Components.Menu setStyleId={setStyleId} />
-    </Map>
-  );
+    );
+  }
 }
 
-export default App;
+class FilterColor extends Component {
+  render() {
+    const { Datas, color, setPopupInfo } = this.props;
+
+    return (
+      <>
+        {Datas?.map((data, index) => (
+          <Fragment key={index}>
+            {color ? (
+              <>
+                {data.properties.Status === color ? (
+                  <Components.Layer
+                    setPopupInfo={setPopupInfo}
+                    data={data}
+                    key={index}
+                  />
+                ) : null}
+              </>
+            ) : (
+              <>
+                {Datas?.map((data, index) => (
+                  <Components.Layer
+                    setPopupInfo={setPopupInfo}
+                    data={data}
+                    key={index}
+                  />
+                ))}
+              </>
+            )}
+          </Fragment>
+        ))}
+      </>
+    );
+  }
+}
+
+const mapStateToProps = (state) => ({
+  Datas: state.dataApi.Datas,
+  isLoading: state.dataApi.loading,
+  token: state.token.value,
+});
+
+function mapDispatchToProps(dispatch) {
+  return {
+    configAPI: (value) => {
+      dispatch(value);
+    },
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
