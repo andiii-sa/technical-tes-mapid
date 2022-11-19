@@ -40,6 +40,7 @@ jalankan react
 ## Fitur-fitur dasar sesuai rekrutmen, dan Fitur-fitur tambahan di luar rekrutmen (jika ada).
 
 Fitur-fitur dasar :
+
 👉 Get API menggunakan AXIOS
 
 👉 Simpan Data kedalam redux
