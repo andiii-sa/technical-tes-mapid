@@ -41,7 +41,11 @@ jalankan react
 
 Fitur-fitur dasar :
 👉 Get API menggunakan AXIOS
+
 👉 Simpan Data kedalam redux
+
 👉 Menampilkan titik-titik lokasi dari API Mapid, dalam mapbox
+
 👉 Menampilkan popup, untuk detail titik tersebut
+
 👉 Pada Components/Layer, saya mengganti yang sebelumnya untuk menampilkan titik-titik, menggunakan library (react-map-gl) Layer & Source. Saya ganti dengan menggunakan Marker, dan Icon saya ganti dengan icon svg.
